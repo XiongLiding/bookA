@@ -17,25 +17,70 @@
 
 内容深度均以满足开发一个简单的微博应用的需求为准。
 
-Node 的安装和 Npm 的使用
-------------------------
-目前，大多数主流的面向桌面用户的 Linux 发行版已经可以通过相应的包管理系统安装 node （以及 npm ）。
+Node 的安装和 Npm 简介
+----------------------
+我们的第一步，必须是安装 node 啊！
+尽管很多介绍 node 的文章或者书籍已经包含了相关内容，这里还是要简单提一下，并且指出一个和微博应用开发相关的编译细节。
 
-以我使用的 Arch 为例，通过以下命令就能进行安装：
+### Node 的安装
+
+目前，大多数主流的面向桌面用户的 Linux 发行版已经可以通过相应的包管理系统安装 node（以及 npm ）。
+
+以我使用的 Arch 为例，通过以下命令就能完成安装：
 
     # pacman -S nodejs
 
-其他系统诸如 Fedora 和 Ubuntu 可以通过 yum 和 apt 命令实现。
+其他发行版，诸如 Fedora 和 Ubuntu 可以通过 yum 和 apt 命令实现。
 
-如果你想使用最新版本，或者想在 CentOS 或 Debian 等官方源中还未提供 node 的服务器发行版中安装，就需要自行下载源代码进行编译了。
-编译前请先确保系统中已经安装了 make gcc 等工具，部分系统还需要安装 openssl-dev （或者 libssl-dev） 来让 node 支持基于 https 通信，这对于运行微博应用是必需的，因为用户鉴权部分的接口只能通过 https 方式进行。
+不过，如果你希望使用最新版本，或者想在 CentOS 或 Debian 等官方源中尚未提供 node 的发行版中安装，就需要自行下载源代码进行编译了。
 
-    $ wget http://nodejs.org/dist/v0.6.18/node-v0.6.18.tar.gz
-    $ tar -zxf node-v0.6.18.tar.gz
-    $ cd node-v0.6.18
-    $ ./configure
-    $ make
-    $ make install
+    $ wget http://nodejs.org/dist/v0.6.18/node-v0.6.18.tar.gz               下载最新版本的 node
+    $ tar -zxf node-v0.6.18.tar.gz                                          解压
+    $ cd node-v0.6.18                                                       切换工作路径
+
+接下来就是安装了，我们以管理员身份进行（普通用户也是可以的）
+    
+    # ./configure
+
+configure 脚本会对编译环境进行检查，在这一步，你很可能会得到如下的结果：
+
+    # ./configure
+    Checking for program g++ or c++          : /usr/bin/g++ 
+    Checking for program cpp                 : /usr/bin/cpp 
+    Checking for program ar                  : /usr/bin/ar 
+    Checking for program ranlib              : /usr/bin/ranlib 
+    Checking for g++                         : ok  
+    Checking for program gcc or cc           : /usr/bin/gcc 
+    Checking for gcc                         : ok  
+    Checking for library dl                  : yes 
+    Checking for openssl                     : not found 
+    Checking for function SSL_library_init   : not found 
+    Checking for header openssl/crypto.h     : not found 
+    node-v0.6.18/wscript:386: error: Could not autodetect OpenSSL support. Make sure OpenSSL development packages are installed. Use configure --without-ssl to disable this message.
+
+如果遇到这个错误，说明你的系统目前不能编译 OpenSSL 相关的功能。
+你可以选择先安装 OpenSSL 的开发包或者用 `./configure --without-ssl` 编译不支持 ssl 功能的 node。
+不支持 ssl，简单的说就是不支持 https 协议，考虑到微博的鉴权接口必须通过 https 进行，我们只能选择先安装 OpenSSL 的开发包。
+
+在 CentOS 系统中，对应的包叫做 openssl-devel：
+
+    # yum install openssl-devel
+
+这样我们就能继续 node 的安装了：
+
+    # ./configure
+    # make && make install
+
+到这里，node 的安装就完成了，我们可以简单检查一下：
+
+    # node -v
+    v0.6.18
+
+### Npm 简介
+
+简单的说，npm 是 node 的包管理器，就是一个类似 yum 或 apt 的工具，就连命令的格式也很相似，`node install` 用来安装，`node remove` 用来移除。
+一般情况下，执行 `node install` 会在当前目录下建立一个 node\_modules 的文件夹，并把你指定的模块安装到这个目录下。
+当然，npm 的功能不止于此，但目前，我们知道这些就够了。
 
 用 Express 搭建一个基础的网页服务器
 -----------------------------------
