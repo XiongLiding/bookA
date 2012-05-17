@@ -19,7 +19,23 @@
 
 Node 的安装和 Npm 的使用
 ------------------------
-占位
+目前，大多数主流的面向桌面用户的 Linux 发行版已经可以通过相应的包管理系统安装 node （以及 npm ）。
+
+以我使用的 Arch 为例，通过以下命令就能进行安装：
+
+    # pacman -S nodejs
+
+其他系统诸如 Fedora 和 Ubuntu 可以通过 yum 和 apt 命令实现。
+
+如果你想使用最新版本，或者想在 CentOS 或 Debian 等官方源中还未提供 node 的服务器发行版中安装，就需要自行下载源代码进行编译了。
+编译前请先确保系统中已经安装了 make gcc 等工具，部分系统还需要安装 openssl-dev （或者 libssl-dev） 来让 node 支持基于 https 通信，这对于运行微博应用是必需的，因为用户鉴权部分的接口只能通过 https 方式进行。
+
+    $ wget http://nodejs.org/dist/v0.6.18/node-v0.6.18.tar.gz
+    $ tar -zxf node-v0.6.18.tar.gz
+    $ cd node-v0.6.18
+    $ ./configure
+    $ make
+    $ make install
 
 用 Express 搭建一个基础的网页服务器
 -----------------------------------
@@ -87,7 +103,30 @@ oauth1.0 鉴权需要通过三个接口实现，分别是：request\_token，aut
 
 node 中的 http 请求模块
 -----------------------
+http.request
 http.get
+
+
+    var http = require('http');
+    
+    var option = {
+      host: 'nb.gl',
+    }
+    
+    http.get(option, function(res){
+      var data = '';
+      console.log(res.headers);
+      res.on('data', function(trunk){
+        data += trunk;
+      });
+      res.on('end', function(trunk){
+        if (trunk) {
+          data += trunk;
+        }
+        console.log(data);
+      });
+    });
+
 
 
 从微博获取数据
