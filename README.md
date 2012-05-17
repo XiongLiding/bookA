@@ -101,7 +101,7 @@ configure 脚本会对编译环境进行检查，在这一步，你很可能会�
 
     /usr/local/bin/express -> /usr/local/lib/node_modules/express/bin/express
 
-表明通过软链的方式建立了一个新的 shell 命令。
+表明通过软链的方式建立了一个新的 shell 命令，顺便提一下，上面那个 /usr/local/lib/node\_modules 就是你的系统级的 node\_modules，所有全局安装的模块都被安装到这个目录下。
 
 ### 用 Express 初始化我们的项目
 
