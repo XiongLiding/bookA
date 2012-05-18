@@ -85,7 +85,7 @@ configure 脚本会对编译环境进行检查，在这一步，你很可能会�
 用 Express 搭建一个基础的网页服务器
 -----------------------------------
 不错，接下来就是介绍 express 了。
-我知道学习一样东西应该循序渐进，先了解基本的原理，再来讲这些第三方的模块或库，但本文确实不打算介绍 hello world 和那些用于演示 node 基本功能活原理的示例。
+我知道学习一样东西应该循序渐进，先了解基本的原理，再来讲这些第三方的模块或库，但本文确实不打算介绍 hello world 和那些用于演示 node 基本功能或原理的示例。
 
 实际上，我们将抛开 node 的原生模块，直接使用 express 来完成我们的第一步。也就是说，即使你没有看过其他介绍 node 的文章，也能顺着这里的路子做下去，并架设起一个网页服务器。
 当然，我绝对支持那些认为要好好掌握 node 的基本原理和原生模块的看法。
@@ -215,13 +215,14 @@ configure 脚本会对编译环境进行检查，在这一步，你很可能会�
 到目前为止，我们的 node 应用已经可以运行了：
     
     $ node app.js
+    Express server listening on port 3000 in development mode
 
-打开浏览器，访问 http://localhost:3000 就可以看到 express 的默认页面了。
+打开浏览器，访问 http://localhost:3000 就可以看到 express 的默认页面了：
 
 ![express.png](https://github.com/surmind/bookA/blob/master/images/Express.png?raw=true)
 
-多个 Web 服务程序并存
----------------------
+监听端口以及多 Web 服务程序并存
+-------------------------------
 占位
 
 Jade 和 Less
