@@ -218,7 +218,7 @@ configure 脚本会对编译环境进行检查，在这一步，你很可能会�
 
 打开浏览器，访问 http://localhost:3000 就可以看到 express 的默认页面了。
 
-![express.png](images/Express.png)
+![express.png](https://github.com/surmind/bookA/blob/master/images/Express.png?raw=true)
 
 多个 Web 服务程序并存
 ---------------------
