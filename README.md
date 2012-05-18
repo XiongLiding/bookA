@@ -101,11 +101,124 @@ configure 脚本会对编译环境进行检查，在这一步，你很可能会�
 
     /usr/local/bin/express -> /usr/local/lib/node_modules/express/bin/express
 
-表明通过软链的方式建立了一个新的 shell 命令，顺便提一下，上面那个 /usr/local/lib/node\_modules 就是你的系统级的 node\_modules，所有全局安装的模块都被安装到这个目录下。
+表明已经通过软链的方式建立了一个新的 shell 命令 express，顺便提一下，上面那个 /usr/local/lib/node\_modules 就是你的系统级的 node\_modules，全局安装的模块都会被安装到这个目录下。
+
+安装报告的最后通常是这个形式：
+
+    express@2.5.9 /usr/local/lib/node_modules/express 
+    ├── qs@0.4.2
+    ├── mime@1.2.4
+    ├── mkdirp@0.3.0
+    └── connect@1.8.7
+
+表明你已经安装了 `express`，版本是 2.5.9， 安装位置在 `/usr/local/lib/node_modules/express`，下面列出的 `qs` `mime` `mkdirp` `connect` 则是 `express` 所依赖的模块。
 
 ### 用 Express 初始化我们的项目
 
-占位
+接下来，我们就要用刚刚安装的 `express` 命令来初始化这个项目了，我们先来看看 `express` 命令是如何使用的：
+
+    $ express -h
+
+      Usage: express [options] [path]
+
+      Options:
+        -s, --sessions           add session support
+        -t, --template <engine>  add template <engine> support (jade|ejs). default=jade
+        -c, --css <engine>       add stylesheet <engine> support (stylus). default=plain css
+        -v, --version            output framework version
+        -h, --help               output help information  
+
+`express` 可以根据用户设置的参数来初始化一个项目，现在，看看我们的需求吧：
+- 我们的应用需要用户登录，所以 session 支持是需要的；
+- 模板引擎，我选择了 jade，由于这是默认选项，我们放弃使用 -t 标签；
+- css 引擎，我想使用 less，但可惜的是当前版本已经不再提供这个选项，我会在后面手动添加对 less 的支持，所以 -c 标签也不需要；
+- 最后，我们需要一个工作目录，就用 ~/weibo 吧
+
+结合以上需求，最终的命令就是：
+    
+    $ express -s ~/weibo
+
+      create : /home/bnlt/weibo
+      create : /home/bnlt/weibo/package.json
+      create : /home/bnlt/weibo/app.js
+      create : /home/bnlt/weibo/public
+      create : /home/bnlt/weibo/public/javascripts
+      create : /home/bnlt/weibo/public/images
+      create : /home/bnlt/weibo/public/stylesheets
+      create : /home/bnlt/weibo/public/stylesheets/style.css
+      create : /home/bnlt/weibo/routes
+      create : /home/bnlt/weibo/routes/index.js
+      create : /home/bnlt/weibo/views
+      create : /home/bnlt/weibo/views/layout.jade
+      create : /home/bnlt/weibo/views/index.jade
+
+      dont forget to install dependencies:
+      $ cd /home/bnlt/weibo && npm install
+
+我们简单看一下安装结果，`express` 首先建立了 /home/bnlt/weibo 目录，就是我们指定的 ~/weibo，bnlt 是我在 Arch 系统中使用的用户名。
+接着是 package.json 文件，这是 node 用来存放项目信息的文件，我们稍后就会用到，到时再来介绍。
+然后是 app.js，这是应用的主文件，我们可以通过 `node app.js` 来启动这个应用。
+之后是 public 文件夹，以及下面的 javascript，images，stylesheets，基本上都是用来存放静态资源的。
+再跟着是 routes，用来存放路由规则。
+最后是 views，里面存放的是模板，由于我们选择了 jade 作为模板引擎，所以里面有两个默认的文件 layout.jade 和 index.jade ，我们会在后面专门讲解 jade 相关的内容。
+
+`express` 命令除了提示我们创建了这些文件外，还不忘提醒我们安装依赖的模块。我们注意到，这个命令最后执行了 `npm install`，但没有指定安装什么模块，这也是 npm 的一个特殊用法：当直接执行 `npm install` 时，npm 会在当前目录下寻找我们之前提到过的 package.json 文件，根据其中的配置来安装依赖的模块。
+
+那么让我们来看看 package.json 里面都有些什么：
+    
+    $ cat ~/weibo/package.json
+    {
+        "name": "application-name"
+      , "version": "0.0.1"
+      , "private": true
+      , "dependencies": {
+          "express": "2.5.8"
+        , "jade": ">= 0.0.1"
+      }
+    }
+
+其中 name 是项目的名称；version 是版本号；private 是用来防止你不小心把私有模块发布出去的；而 dependencies 就是对其他模块的依赖情况，`npm install` 正是根据这里的内容来决定要安装哪些模块，从这里看到，我们的项目需要 express 2.5.8 以及版本高于 0.0.1 的 jade，细心的朋友可能已经发现了，我们安装的 express 版本是 2.5.9，这里需要的则是 2.5.8。
+
+让我们执行一下命令看看结果吧：
+
+    $ cd ~/weibo && npm install
+
+      npm http GET https://registry.npmjs.org/express/2.5.8
+      npm http GET https://registry.npmjs.org/jade
+      npm http 304 https://registry.npmjs.org/express/2.5.8
+      npm http 304 https://registry.npmjs.org/jade
+      npm http GET https://registry.npmjs.org/qs
+      npm http GET https://registry.npmjs.org/connect
+      npm http GET https://registry.npmjs.org/mime/1.2.4
+      npm http GET https://registry.npmjs.org/mkdirp/0.3.0
+      npm http GET https://registry.npmjs.org/commander/0.5.2
+      npm http 304 https://registry.npmjs.org/qs
+      npm http 304 https://registry.npmjs.org/connect
+      npm http 304 https://registry.npmjs.org/mime/1.2.4
+      npm http 304 https://registry.npmjs.org/mkdirp/0.3.0
+      npm http 304 https://registry.npmjs.org/commander/0.5.2
+      npm http GET https://registry.npmjs.org/formidable
+      npm http 304 https://registry.npmjs.org/formidable
+      jade@0.26.0 ./node_modules/jade
+      ├── commander@0.5.2
+      └── mkdirp@0.3.0
+  
+      express@2.5.8 ./node_modules/express
+      ├── qs@0.4.2
+      ├── mime@1.2.4
+      ├── mkdirp@0.3.0
+      └── connect@1.8.7 (formidable@1.0.9)
+
+发现了么，尽管我们的系统中已经安装了更新版本的 express 2.5.9，npm 还是按照 package.json 的意思为当前项目安装了 2.5.8。
+至于为什么用 express 2.5.9 初始化的项目想依赖 express 2.5.8，并不是我们现在要关心的问题（其实 2 天前已经有人报告了这个 issus），重要的是，我们要知道 npm 是按照 package.json 来决定安装哪个版本的模块的。
+
+到目前位置，我们的 node 应用已经可以运行了：
+    
+    $ node app.js
+
+打开浏览器，访问 http://localhost:3000 就可以看到 express 的默认页面了。
+
+![express.png](images/Express.png)
 
 多个 Web 服务程序并存
 ---------------------
