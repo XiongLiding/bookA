@@ -223,7 +223,83 @@ configure 脚本会对编译环境进行检查，在这一步，你很可能会�
 
 监听端口以及多 Web 服务程序并存
 -------------------------------
-占位
+
+这一节，我们会讨论如何设置应用监听的端口，以及如何通过设置反向代理来和其他 Web 服务器共存。
+
+### 监听端口
+
+你应该已经注意到，我们之前访问的地址是 http://localhost:3000，也就是说，用 express 初始化的项目，默认使用了 3000 端口。
+这个设置可以在 app.js 文件中修改，我们看到， app.js 的最后三行是这样的：
+
+    app.listen(3000, function(){
+      console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
+    });
+
+这里通过 listen 方法开始监听请求，第一参数 3000 就是指定的监听端口。
+紧跟其后的匿名函数会在成功开启监听后回调，我们之前执行 `node app.js` 时看到的提示信息正是通过这个函数输出的，但这里不对它做更深入的分析。
+
+通过修改 listen 函数的第一个参数，我们就能改变应用监听的端口，事实上除了用数字表示的端口外，这个参数也可以设为一个指向系统中的 unix domain socket 文件的字符串，通过 socket 通讯。
+
+好了，那让我们把这个端口改成 80 吧，这样通过浏览器访问时就不用再指定端口了，你和你的用户都会很满意。改完之后，我们再次执行：
+
+    $ node app.js
+
+    events.js:48
+            throw arguments[1]; // Unhandled 'error' event
+                           ^
+    Error: listen EACCES
+        at errnoException (net.js:670:11)
+        at Array.0 (net.js:756:28)
+        at EventEmitter._tickCallback (node.js:190:38)
+
+哦，看样子我们遇到了一个错误：listen EACCES ，这是由于我们在以普通用户的身份执行 node ，而在 linux 下，普通用户是无权占用 0 - 1023 的，也就是通常所说的周知端口。
+
+好吧，让我们试试用管理员权限运行，你成功了吗？也许吧。
+但是，对于部分用户，仍有可能遇到错误：
+
+    # node app.js
+
+    events.js:48
+            throw arguments[1]; // Unhandled 'error' event
+                       ^
+    Error: listen EADDRINUSE
+        at errnoException (net.js:670:11)
+        at Array.0 (net.js:771:26)
+        at EventEmitter._tickCallback (node.js:190:38)
+
+这里的 listen EADDRINUSE 表示 80 端口已经被占用了。
+一般情况下，这是由于已经开启了其他 Web 服务程序引起的，可以看看你的服务器上是不是启动了 apache nginx lighttpd 等其他 Web 服务程序。
+还有另一种比较常见的情况就是你重复执行了 `node app.js`，比如你同时打开了两个终端，然后各自去启动了相同的应用，后启动的那个就会报告上面这个错误。
+
+针对 80 端口被占用的情况，如果是在你自己开发用的机器上，你可以先关闭那个占用端口的软件。
+但如果这是一台运行中的生产服，并且你已经通过那个软件部署了公开的站点，就要按照下面的方法来处理了。
+
+### 多 Web 服务器并存
+
+我们刚刚提到了 80 端口被其他软件占用的情况，其实这是很常见的，比如我就和一位朋友合租了一台 vps ，我们通过 lighttpd 和 php 在上面托管了各自的博客，还有一些试验性质的小东西。
+
+如果我想让 node 再去使用 80 端口，那是不可能的，但我可以通过一些手段，让它看起来像使用了 80 端口，那就是使用 Web 服务器的代理功能。
+
+我们先把 app.js 中的端口设置改回 3000，这样，我们就能以普通用户的身份启动它了。
+
+然后我们对 lighttpd 的配置文件进行修改，添加以下内容：
+
+    $HTTP["host"] =~ "nb.gl" {
+        proxy.server = ( "" =>
+             ((
+                 "host" => "127.0.0.1",
+                 "port" => 3000
+             ))
+        )
+    }
+
+这里的 nb.gl 是我给我的应用准备的域名，你可以用自己的域名代替。
+这段配置的意思就是把所有对 nb.gl 域下的内容的访问，转发到 3000 端口。
+另外，我们要确保加载了 mod\_proxy 模块，然后通过 lighttpd 的 reload 机制让新配置生效。
+
+这样一来，当我们访问 http://nb.gl 时，其实就是访问了那台服务器的 3000 端口，也就是我们的 node 应用了。
+
+apache 和 nginx 也都支持类似的代理功能，具体实现，就不在这里讲述了。
 
 Jade 和 Less
 ------------
