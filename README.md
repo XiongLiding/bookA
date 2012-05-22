@@ -301,8 +301,109 @@ configure 脚本会对编译环境进行检查，在这一步，你很可能会�
 
 apache 和 nginx 也都支持类似的代理功能，具体实现，就不在这里讲述了。
 
-Jade 和 Less
-------------
+视图和 Jade
+-----------
+
+到目前为止，开发的环境已经准备就绪，接下来就要开始编写我们的应用了。
+
+在用 `express` 命令初始化项目时，我们已经提到过，我们选择的模板引擎是默认的 jade，也知道模板是被存放在 views 目录下的。
+我们就从这里开始：
+
+    $ ls ~/weibo/views
+    index.jade  layout.jade
+
+我们先来看一下 index.jade 的内容
+    
+    h1= title
+    p Welcome to #{title}
+
+你可能对 jade 的语法不了解，这里简单解释一下。
+jade 使用类似 css 样式选择器的语法来构建标签，比如：
+
+    p#i.c
+
+会被编译成：
+
+    <p id="i" class="c"></p>
+
+在“选择器”后面跟上一个字符串，就会被视作标签里的文本，比如：
+
+    p#i.c content 
+
+会被编译成：
+
+    <p id="i" class="c">content</p>
+
+如果像 index.jade 中那样在标签后面加上 `=` 符号，后面的字符串就会被视为变量名而非文本；如果要在文本串中嵌入变量，就要采取 index.jade 中第二行所采用的语法，使用 `#{...}` 来引入变量。
+
+在我们的项目中，目前 `title` 的值被设置为 `Express`，因此，index.jade 被渲染后应该是：
+
+    <h1>Express</h1>
+    <p>Welcome to Express</p>
+
+正是我们访问 http://localhost:3000 所见的内容。
+
+但是如果你查看网页的源文件，你会发现它是这样的：
+
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head><title>Express</title><link rel="stylesheet" href="/stylesheets/style.css"/></head><body><h1>Express</h1><p>Welcome to Express</p></body></html>
+
+经过整理后，是这样：
+
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html>
+    <head>
+      <title>Express</title>
+      <link rel="stylesheet" href="/stylesheets/style.css"/>
+    </head>
+    <body>
+      <h1>Express</h1>
+      <p>Welcome to Express</p>
+    </body>
+    </html>
+
+也就是说，index.jade 渲染出来的只是这个页面的 `body` 标签里的那部分。
+
+那么其他部分是哪来的呢？
+这里我们就要介绍下 express 的 `view options` 参数了。
+默认情况下，这个参数被设置为 true，此时如果我们去渲染 index.jade ，得到的内容并不会被作为最终结果，而是被存在变量 body 中，之后 express 会带着这个变量再去渲染 layout.jade，这次解析得到的结果才会作为最终内容被发送到访问者的浏览器中。
+
+我们可以通过在 app.js 中加入以下代码来禁用这个机制：
+    
+    app.set('view options', {
+      layout: false
+    });
+
+我一般会把这段代码跟在
+
+    app.set('view engine', 'jade');
+
+后面。
+
+我们也可以通过类似的方法指定自定义的模板文件：
+
+    app.set('view options', {
+      layout: 'mylayout.jade'
+    });
+
+除了指定全局的 layout 外，我们还可以针对不同文件，分别指定，但这里不再详述。
+
+现在，我们回到项目中，看看 layout.jade 里有些什么：
+
+    !!!
+    html
+      head
+        title= title
+        link(rel='stylesheet', href='/stylesheets/style.css')
+      body!= body
+
+不难看出， jade 通过缩进来表示 html 标签间的嵌套关系。
+这里需要特别说明一下的是第 1 行的三个叹号，是用来生成 `<DOCTYPE>` 的，在这里我们不需要特别修改它。
+
+另外需要引起注意的就是 `body!= body` 了，我们知道 `=` 是用来引入一个变量的，但是实际上它同时也会对变量进行所谓的 escape 操作，也就是对变量中包含的 html 特殊符号进行转义。
+由于 body 变量是通过渲染 index.jade 得到的，其中含有特殊符号，并且我们希望它们能按原样输出，因此就需要 `!=` 直接输出变量而不进行 escape 操作。
+
+中间件和 Less
+-------------
 占位
 
 获得 App Key 和 App Secret
@@ -382,8 +483,6 @@ http.get
         console.log(data);
       });
     });
-
-
 
 从微博获取数据
 --------------
