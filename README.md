@@ -304,9 +304,7 @@ apache 和 nginx 也都支持类似的代理功能，具体实现，就不在这
 视图和 Jade
 -----------
 
-到目前为止，开发的环境已经准备就绪，接下来就要开始编写我们的应用了。
-
-在用 `express` 命令初始化项目时，我们已经提到过，我们选择的模板引擎是默认的 jade，也知道模板是被存放在 views 目录下的。
+在用 `express` 命令初始化项目时，我们已经提到过，我们选择的模板引擎是默认的 jade，也知道模板文件是被存放在 views 目录下的。
 我们就从这里开始：
 
     $ ls ~/weibo/views
@@ -334,20 +332,20 @@ jade 使用类似 css 样式选择器的语法来构建标签，比如：
 
     <p id="i" class="c">content</p>
 
-如果像 index.jade 中那样在标签后面加上 `=` 符号，后面的字符串就会被视为变量名而非文本；如果要在文本串中嵌入变量，就要采取 index.jade 中第二行所采用的语法，使用 `#{...}` 来引入变量。
+如果像 index.jade 中那样在标签后面加上 `=` 符号，后面的字符串就会被视为变量名而非文本；如果要在文本串中嵌入变量，就要采取 index.jade 中第二行所采用的语法，使用 `#{变量名}` 来引入变量。
 
-在我们的项目中，目前 `title` 的值被设置为 `Express`，因此，index.jade 被渲染后应该是：
+目前，`title` 的值是 `Express`——当我们讲到 routes 时会说明如何设定模板中的变量——因此，index.jade 被渲染后应该是：
 
     <h1>Express</h1>
     <p>Welcome to Express</p>
 
 正是我们访问 http://localhost:3000 所见的内容。
 
-但是如果你查看网页的源文件，你会发现它是这样的：
+但是，如果你查看源文件的话，你会发现它是这样的：
 
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><head><title>Express</title><link rel="stylesheet" href="/stylesheets/style.css"/></head><body><h1>Express</h1><p>Welcome to Express</p></body></html>
 
-经过整理后，是这样：
+经过整理后，就是这样：
 
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html>
@@ -361,11 +359,11 @@ jade 使用类似 css 样式选择器的语法来构建标签，比如：
     </body>
     </html>
 
-也就是说，index.jade 渲染出来的只是这个页面的 `body` 标签里的那部分。
+也就是说，index.jade 渲染出来的只是这个页面的 `body` 标签里的部分。
 
-那么其他部分是哪来的呢？
-这里我们就要介绍下 express 的 `view options` 参数了。
-默认情况下，这个参数被设置为 true，此时如果我们去渲染 index.jade ，得到的内容并不会被作为最终结果，而是被存在变量 body 中，之后 express 会带着这个变量再去渲染 layout.jade，这次解析得到的结果才会作为最终内容被发送到访问者的浏览器中。
+那么其他内容是哪来的呢？
+这里，我们就要介绍下 express 的 `view options` 参数了。
+在默认情况下，这个参数被设置为 true，此时，如果我们去渲染 index.jade ，得到的内容并不会被作为最终结果，而是被存在变量 body 中，之后 express 会带着这个变量再去渲染 layout.jade，这次解析得到的结果才会作为最终内容被发送到访问者的浏览器中。
 
 我们可以通过在 app.js 中加入以下代码来禁用这个机制：
     
@@ -397,24 +395,67 @@ jade 使用类似 css 样式选择器的语法来构建标签，比如：
       body!= body
 
 不难看出， jade 通过缩进来表示 html 标签间的嵌套关系。
-这里需要特别说明一下的是 `!!!` 是用来生成 `DOCTYPE` 的，目前我们并不打算修改它。
+这里需要特别说明一下的是 `!!!` 是用来生成 `DOCTYPE` 的，目前我们不需要动它。
 
-另外需要引起注意的就是 `body!= body` 了，我们已经知道，`=` 是用来引入一个变量的，但是实际上它同时也会对变量进行所谓的 escape 操作，也就是对变量中包含的 html 特殊符号进行转义，以防止对 html 的结构产生破坏并达到预防跨站脚本攻击的目的。
-由于 body 变量是通过渲染 index.jade 得到的，其中含 html 标签，并且我们希望它们能按原样输出，因此就需要 `!=` 直接输出变量而不进行 escape 操作。
-
-中间件和 Less
--------------
-占位
+另外需要引起注意的就是 `body!= body` 了，我们已经知道，`=` 是用来引入一个变量的，但实际上它会先对那个变量进行所谓的 escape 操作，也就是把变量中包含的 html 特殊符号进行转义，从而防止变量对 html 的结构产生破坏并达到预防跨站脚本攻击的目的。
+由于 body 变量是通过渲染 index.jade 得到的，其中包含了 html 标签，而我们又是希望这些标签能按原样输出的，因此就需要使用直接输出变量而不进行 escape 操作的 `!=` 了 。
 
 获得 App Key 和 App Secret
 --------------------------
-占位
+
+接下来的内容都是和微博相关的，因此，在继续之前，我们需要准备好一对 APP KEY 和 APP SECRET 。
+你可以选择自己喜欢的微博平台进行申请，成功创建一个应用后，平台就会为你分配一对 APP KEY 和 APP SECRET。
+
+不同的微博平台申请流程略有不同，但都有比较完善的引导机制，你只要按着你所选择的平台上的说明，提交一系列的表单就能完成申请了。
+
+不过为了演示的方便，这里建议你使用腾讯微博。
+
+- 腾讯微博：[http://open.t.qq.com](http://open.t.qq.com)
+
+现在，去创建你的应用并把 APP KEY 和 APP SECRET 带来，我会在这里等你。
 
 用户授权
 --------
-既然是做一个微博应用，首先必须让我们的网络应用实现接入微博的能力。
-通常，接入微博的第一步，就是实现通过微博帐号登录应用的功能。
-这里，我们选择 oauth1.0 来实现这个功能，至于为什么选择 1.0 而不使用“更简单，更安全”的 2.0，我们会在后面讲到原因。
+
+既然是做一个微博应用，首先必须解决微博用户的接入问题。
+直接点讲，就是允许用户使用他们的微博帐号登录我们的网络应用，也就是让用户授权。
+
+只有完成了用户授权，我们才能进行进一步的开发，实现转发，评论等交互功能。
+
+### 登录按钮
+
+我们先在自己的网页上添加一个登录按钮，其链接的地址是微博的用户授权页面。
+以我的应用为例，授权页面链接是：
+    
+    https://open.t.qq.com/cgi-bin/oauth2/authorize?client_id=801145472&response_type=code&redirect_uri=http://nb.gl/login 
+
+其中 `https://open.t.qq.com/cgi-bin/oauth2/authorize` 是腾讯微博用于用户授权的页面地址，`801145472` 是我的应用的 APP KEY，你要使用自己的 KEY，最后 `http://nb.gl/login` 是用于接收用户授权后产生的 code 的页面地址，并且我们会在这里完成把 code 换成 accesstoken 的步骤。
+
+在本地测试时，你可以把 `redirect_uri` 设置为 `http://127.0.0.1:3000/login` ，注意，这里只能使用 `127.0.0.1` 而不能使用 `localhost`，否则授权页面会提示你的 `redirect_uri` 是非法的。
+
+接下来我们通过修改 index.jade 来生成这个链接：
+
+    a(href='https://open.t.qq.com/cgi-bin/oauth2/authorize?client_id=801145472&response_type=code&redirect_uri=http://127.0.0.1/login') 登录
+
+为了让演示更直观，我们把地址直接写在模板文件中，在实际开发中，这可不是好习惯。
+不管怎样，我们的链接做好了。
+需要注意：修改 views 下的模板文件，不需要重新启动应用，它们是立即生效的。
+
+访问 http://127.0.0.1:3000/ 我们看到如下界面：
+
+![express.png](https://github.com/surmind/bookA/blob/master/images/AuthorizeLink.png?raw=true)
+
+### 授权
+
+点击上一步生成的链接，就会进入微博的授权页面，这个页面将向你确认是否授权给这个应用，登录微薄并完成授权后，页面会跳转到 `redirect_uri` 对应的页面。
+
+### 接收 code
+
+用户完成授权后，就会跳转到类似下面的地址：
+
+    http://127.0.0.1:3000/login?code=5e742a02447f10d0e87d8a89dcdd6483&openid=F2CFxxxxxxxxxxxxxxxxxxxxxxxx21E6&openkey=680AxxxxxxxxxxxxxxxxxxxxxxxxDCA1
+
+其中的 openid 和 openkey 参数是腾讯微博特有的，这里我们不去管它们。
 
 永远在线的用户
 --------------
